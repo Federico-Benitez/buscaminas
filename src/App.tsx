@@ -1,35 +1,84 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import { generateBoard } from "./game/generateBoard";
+import { Board as BoardComponent } from "./components/Board";
+import { floodFill } from "./game/floodFill";
+import type { Board } from "./game/types";
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [board, setBoard] = useState(() => generateBoard(9, 9, 10));
+  const [gameOver, setGameOver] = useState(false);
+
+  function resetGame() {
+    setBoard(generateBoard(9, 9, 10));
+    setGameOver(false);
+  }
+
+
+
+  const handleLeftClick = (x: number, y: number) => {
+    if (gameOver) return;
+
+    const newBoard = structuredClone(board);
+    const cell = newBoard[y][x];
+
+    if (cell.isRevealed || cell.isFlagged) return;
+
+    // Si tocás una mina → perdiste
+    if (cell.isMine) {
+      revealAllMines(newBoard);
+      setGameOver(true);
+      setBoard(newBoard);
+      return;
+    }
+
+    cell.isRevealed = true;
+
+    if (cell.neighborMines === 0) {
+      floodFill(newBoard, x, y);
+    }
+
+    setBoard(newBoard);
+  };
+
+  const handleRightClick = (x: number, y: number) => {
+    if (gameOver) return;
+
+    const newBoard = structuredClone(board);
+    const cell = newBoard[y][x];
+
+    if (cell.isRevealed) return;
+
+    cell.isFlagged = !cell.isFlagged;
+    setBoard(newBoard);
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="p-6 flex flex-col items-center gap-4">
+      <button
+        onClick={resetGame}
+        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500"
+      >
+        Reiniciar partida
+      </button>
+
+      <BoardComponent
+        board={board}
+        onCellClick={handleLeftClick}
+        onCellRightClick={handleRightClick}
+      />
+    </div>
+  );
+
 }
 
-export default App
+function revealAllMines(board: Board) {
+  board.forEach(row =>
+    row.forEach(cell => {
+      if (cell.isMine) {
+        cell.isRevealed = true;
+      }
+    })
+  );
+}
+
+
