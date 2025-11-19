@@ -19,21 +19,26 @@ export function Cell({ cell, onClick, onRightClick }: Props) {
     content = "🚩";
   }
 
-    return (
-        <button
-            onClick={onClick}
-            onContextMenu={onRightClick}
-            className={`
-        w-10 h-10 border flex items-center justify-center select-none
-        transition-all duration-150
+  return (
+    <button
+      onClick={onClick}
+      onContextMenu={onRightClick}
+      className={`
+        w-10 h-10 flex items-center justify-center
+        select-none transition-transform duration-150
+
+        border border-gray-700 
+        text-lg font-bold
+
         ${cell.isRevealed
-                    ? "bg-gray-300 scale-100"
-                    : "bg-gray-500 hover:bg-gray-400 active:scale-90"
-                }
+          ? "bg-gray-300"
+          : "bg-gray-500 hover:bg-gray-400 active:scale-[0.97]"
+        }
+
         ${cell.isRevealed ? "animate-reveal" : ""}
       `}
-        >
-            {content}
-        </button>
-    );
+    >
+      {content}
+    </button>
+  );
 }

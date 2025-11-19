@@ -6,10 +6,9 @@
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
+  background-color: #ffffff;
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -29,7 +28,8 @@ a:hover {
 body {
   margin: 0;
   display: flex;
-  place-items: center;
+  align-items: center;
+  justify-content: center;
   min-width: 320px;
   min-height: 100vh;
 }
@@ -84,4 +84,11 @@ button:focus-visible {
 
 .animate-reveal {
   animation: reveal 0.12s ease-out;
+}
+
+@media (max-width: 480px) {
+  .cell-size {
+    width: 1.8rem;
+    height: 1.8rem;
+  }
 }
