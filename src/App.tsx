@@ -61,7 +61,7 @@ export default function App() {
   return (
     <main className="flex flex-col justify-center h-max max-w-4xl w-full mx-auto border-2">
       {won && (
-        <div className="text-green-700 font-bold text-xl">
+        <div className="text-green-700 font-bold text-xl text-center">
           ¡Ganaste! 🎉
         </div>
       )}
