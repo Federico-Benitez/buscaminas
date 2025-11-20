@@ -32,10 +32,11 @@ export default function App() {
       return;
     }
 
-    cell.isRevealed = true;
-
+    // Si no tiene minas vecinas, usar floodFill para revelar recursivamente.
     if (cell.neighborMines === 0) {
       floodFill(newBoard, x, y);
+    } else {
+      cell.isRevealed = true;
     }
 
     // 🔥 Detectar victoria
