@@ -30,7 +30,7 @@ export function Cell({ cell, onClick, onRightClick }: Props) {
       <span className="flex items-center justify-center w-full h-full">
         {cell.isRevealed && cell.isMine && (
           <span className="flex items-center justify-center">
-            <Bomb size={24} className="text-black fill-red-600" />
+            <Bomb size={24} className="text-black fill-black" />
           </span>
         )}
         {cell.isRevealed && !cell.isMine && cell.neighborMines > 0 && (
