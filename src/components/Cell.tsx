@@ -1,4 +1,5 @@
 import type { Cell as CellType } from "../game/types";
+import { Bomb, Flag } from "lucide-react";
 
 type Props = {
   cell: CellType;
@@ -7,16 +8,16 @@ type Props = {
 };
 
 export function Cell({ cell, onClick, onRightClick }: Props) {
-  let content = "";
+  let content: React.ReactNode = "";
 
   if (cell.isRevealed) {
     if (cell.isMine) {
-      content = "💣";
+      content = <Bomb className="w-6 h-6 text-black fill-red-500" />;
     } else if (cell.neighborMines > 0) {
       content = String(cell.neighborMines);
     }
   } else if (cell.isFlagged) {
-    content = "🚩";
+    content = <Flag className="w-5 h-5 text-red-500 fill-red-500" />;
   }
 
   return (

@@ -1,7 +1,3 @@
-
-
-
-
 import type { MouseEvent } from 'react';
 
 type Level = {

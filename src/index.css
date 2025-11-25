@@ -89,6 +89,35 @@ button:focus-visible {
   animation: reveal 0.12s ease-out;
 }
 
+@keyframes heart-drop {
+  0% {
+    transform: translateX(0) translateY(0);
+    opacity: 1;
+  }
+  20% {
+    transform: translateX(-3px) translateY(5px);
+  }
+  40% {
+    transform: translateX(3px) translateY(10px);
+  }
+  60% {
+    transform: translateX(-3px) translateY(15px);
+    opacity: 0.8;
+  }
+  80% {
+    transform: translateX(3px) translateY(20px);
+    opacity: 0.4;
+  }
+  100% {
+    transform: translateX(0) translateY(30px);
+    opacity: 0;
+  }
+}
+
+.animate-heart-drop {
+  animation: heart-drop 0.8s ease-in forwards;
+}
+
 @media (max-width: 480px) {
   .cell-size {
     width: 1.8rem;

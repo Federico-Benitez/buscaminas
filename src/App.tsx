@@ -7,6 +7,7 @@ import { useEffect } from "react";
 
 export default function App() {
   const [lives, setLives] = useState(0);
+  const [maxLives, setMaxLives] = useState(0);
   const [level, setLevel] = useState<'beginner' | 'intermediate' | 'expert' | 'custom' | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -27,6 +28,7 @@ export default function App() {
     const cfg = levels.find((l) => l.id === level) ?? levels[0];
     setBoard(BoardClass.create(cfg.rows, cfg.cols, cfg.mines));
     setLives(cfg.lives);
+    setMaxLives(cfg.lives);
     setGameOver(false);
     setWon(false);
     setMessage(null);
@@ -88,6 +90,7 @@ export default function App() {
       setLevel('custom');
       setBoard(BoardClass.create(rows, cols, mines));
       setLives(1); // Custom level gets 1 life by default
+      setMaxLives(1);
       setGameOver(false);
       setWon(false);
       setMessage(null);
@@ -98,20 +101,20 @@ export default function App() {
     setLevel(id);
     setBoard(BoardClass.create(cfg.rows, cfg.cols, cfg.mines));
     setLives(cfg.lives);
+    setMaxLives(cfg.lives);
     setGameOver(false);
     setWon(false);
     setMessage(null);
   }
 
   return (
-    <main className="flex flex-col justify-center h-max max-w-4xl w-full mx-auto border-2">
+    <main className="flex flex-col justify-center items-center min-h-screen w-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
 
       {level === null ? (
         <LevelSelector levels={levels.map((l) => ({ id: l.id, label: l.label }))} onSelect={handleSelectLevel} />
       ) : (
         <>
-          <div className="flex justify-between px-6 py-2 bg-gray-100 dark:bg-gray-800">
-            <div className="font-bold text-black dark:text-white">Vidas: {lives} ❤️</div>
+          <div className="flex justify-center px-6 py-2 min-h-[40px]">
             {message && <div className="text-orange-600 font-bold animate-pulse">{message}</div>}
           </div>
 
@@ -133,6 +136,8 @@ export default function App() {
           </button>
           <BoardComponent
             board={board}
+            lives={lives}
+            maxLives={maxLives}
             onCellClick={handleLeftClick}
             onCellRightClick={handleRightClick}
           />
