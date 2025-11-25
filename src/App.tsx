@@ -115,22 +115,46 @@ export default function App() {
       ) : (
         <>
           <div className="flex justify-center px-6 py-2 min-h-[40px]">
-            {message && <div className="text-orange-600 font-bold animate-pulse">{message}</div>}
+            {message && (
+              <div className="font-mono font-bold text-orange-500 animate-pulse tracking-wider drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">
+                {message}
+              </div>
+            )}
           </div>
 
           {won && (
-            <div className="text-green-700 dark:text-green-300 font-bold text-xl text-center">
+            <div className="
+              font-mono font-bold text-3xl text-center uppercase tracking-[0.2em]
+              text-green-400 drop-shadow-[3px_3px_0_#14532d]
+              animate-bounce
+              mb-4
+            ">
               ¡Ganaste! 🎉
             </div>
           )}
           {gameOver && (
-            <div className="text-red-700 dark:text-red-300 font-bold text-xl text-center">
+            <div className="
+              font-mono font-bold text-3xl text-center uppercase tracking-[0.2em]
+              text-red-500 drop-shadow-[3px_3px_0_#7f1d1d]
+              mb-4
+            ">
               ¡Perdiste! 💥
             </div>
           )}
           <button
             onClick={resetGame}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500"
+            className="
+              px-6 py-3 mt-4 mb-2
+              font-mono font-bold uppercase tracking-widest
+              bg-gray-900 text-green-400
+              border-4 border-green-400
+              shadow-[4px_4px_0_0_#4ade80]
+              hover:translate-x-[2px] hover:translate-y-[2px]
+              hover:shadow-[2px_2px_0_0_#4ade80]
+              active:translate-x-[4px] active:translate-y-[4px]
+              active:shadow-none
+              transition-all duration-75
+            "
           >
             Reiniciar partida
           </button>
