@@ -8,18 +8,6 @@ type Props = {
 };
 
 export function Cell({ cell, onClick, onRightClick }: Props) {
-  let content: React.ReactNode = "";
-
-  if (cell.isRevealed) {
-    if (cell.isMine) {
-      content = <Bomb className="w-6 h-6 text-black fill-red-500" />;
-    } else if (cell.neighborMines > 0) {
-      content = String(cell.neighborMines);
-    }
-  } else if (cell.isFlagged) {
-    content = <Flag className="w-5 h-5 text-red-500 fill-red-500" />;
-  }
-
   return (
     <button
       onClick={onClick}
@@ -39,7 +27,21 @@ export function Cell({ cell, onClick, onRightClick }: Props) {
         ${cell.isRevealed ? "animate-reveal" : ""}
       `}
     >
-      {content}
+      <span className="flex items-center justify-center w-full h-full">
+        {cell.isRevealed && cell.isMine && (
+          <span className="flex items-center justify-center">
+            <Bomb size={24} className="text-black fill-red-600" />
+          </span>
+        )}
+        {cell.isRevealed && !cell.isMine && cell.neighborMines > 0 && (
+          cell.neighborMines
+        )}
+        {!cell.isRevealed && cell.isFlagged && (
+          <span className="flex items-center justify-center">
+            <Flag size={20} className="text-red-600 fill-red-600" />
+          </span>
+        )}
+      </span>
     </button>
   );
 }
