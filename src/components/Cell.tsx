@@ -31,8 +31,8 @@ export function Cell({ cell, onClick, onRightClick }: Props) {
         text-lg font-bold
 
         ${cell.isRevealed
-          ? "bg-gray-300"
-          : "bg-gray-500 hover:bg-gray-400 active:scale-[0.97]"
+          ? "bg-gray-300 text-black"
+          : "bg-gray-500 hover:bg-gray-400 active:scale-[0.97] text-white"
         }
 
         ${cell.isRevealed ? "animate-reveal" : ""}

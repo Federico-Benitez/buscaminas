@@ -3,15 +3,19 @@ import BoardClass from "./game/Board";
 import { Board as BoardComponent } from "./components/Board";
 // procedural functions moved into Board OOP
 import LevelSelector from "./components/LevelSelector";
+import { useEffect } from "react";
 
 export default function App() {
+  const [lives, setLives] = useState(0);
   const [level, setLevel] = useState<'beginner' | 'intermediate' | 'expert' | 'custom' | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+
   // Definición de niveles y sus configuraciones
   const levels = [
-    { id: 'beginner', label: 'Principiante (9x9, 10 minas)', rows: 9, cols: 9, mines: 10 },
-    { id: 'intermediate', label: 'Intermedio (16x16, 40 minas)', rows: 16, cols: 16, mines: 40 },
-    { id: 'expert', label: 'Experto (30x16, 99 minas)', rows: 16, cols: 30, mines: 99 },
-    { id: 'custom', label: 'Personalizado', rows: 9, cols: 9, mines: 10 },
+    { id: 'beginner', label: 'Principiante (9x9, 10 minas, 3 vidas)', rows: 9, cols: 9, mines: 10, lives: 3 },
+    { id: 'intermediate', label: 'Intermedio (16x16, 40 minas, 2 vidas)', rows: 16, cols: 16, mines: 40, lives: 2 },
+    { id: 'expert', label: 'Experto (30x16, 99 minas, 1 vida)', rows: 16, cols: 30, mines: 99, lives: 1 },
+    { id: 'custom', label: 'Personalizado', rows: 9, cols: 9, mines: 10, lives: 1 },
   ] as const;
 
   const [board, setBoard] = useState(() => BoardClass.create(9, 9, 10));
@@ -22,20 +26,41 @@ export default function App() {
     // Reiniciar según el nivel seleccionado
     const cfg = levels.find((l) => l.id === level) ?? levels[0];
     setBoard(BoardClass.create(cfg.rows, cfg.cols, cfg.mines));
+    setLives(cfg.lives);
     setGameOver(false);
     setWon(false);
+    setMessage(null);
     setLevel(null);
   }
 
-
+  // Auto-clear message after a short duration
+  useEffect(() => {
+    if (!message) return;
+    const t = setTimeout(() => setMessage(null), 3000);
+    return () => clearTimeout(t);
+  }, [message]);
 
   const handleLeftClick = (x: number, y: number) => {
     if (gameOver || won) return;
+
+    // Clear message on new interaction
+    if (message) setMessage(null);
+
     const newBoard = board.revealAt(x, y);
     const clickedCell = newBoard.grid[y]?.[x];
+
     if (clickedCell?.isMine && clickedCell?.isRevealed) {
-      setGameOver(true);
+      if (lives > 1) {
+        setLives(l => l - 1);
+        setMessage("¡Cuidado! Perdiste una vida 💔");
+        // We keep the mine revealed but don't end the game
+      } else {
+        setLives(0);
+        setGameOver(true);
+        newBoard.revealAllMines();
+      }
     }
+
     if (newBoard.checkVictory()) setWon(true);
     setBoard(newBoard);
   };
@@ -62,19 +87,21 @@ export default function App() {
 
       setLevel('custom');
       setBoard(BoardClass.create(rows, cols, mines));
+      setLives(1); // Custom level gets 1 life by default
       setGameOver(false);
       setWon(false);
+      setMessage(null);
       return;
     }
 
     // Nivel normal
     setLevel(id);
     setBoard(BoardClass.create(cfg.rows, cfg.cols, cfg.mines));
+    setLives(cfg.lives);
     setGameOver(false);
     setWon(false);
+    setMessage(null);
   }
-
-
 
   return (
     <main className="flex flex-col justify-center h-max max-w-4xl w-full mx-auto border-2">
@@ -83,9 +110,19 @@ export default function App() {
         <LevelSelector levels={levels.map((l) => ({ id: l.id, label: l.label }))} onSelect={handleSelectLevel} />
       ) : (
         <>
+          <div className="flex justify-between px-6 py-2 bg-gray-100 dark:bg-gray-800">
+            <div className="font-bold text-black dark:text-white">Vidas: {lives} ❤️</div>
+            {message && <div className="text-orange-600 font-bold animate-pulse">{message}</div>}
+          </div>
+
           {won && (
-            <div className="text-green-700 font-bold text-xl text-center">
+            <div className="text-green-700 dark:text-green-300 font-bold text-xl text-center">
               ¡Ganaste! 🎉
+            </div>
+          )}
+          {gameOver && (
+            <div className="text-red-700 dark:text-red-300 font-bold text-xl text-center">
+              ¡Perdiste! 💥
             </div>
           )}
           <button
@@ -104,8 +141,8 @@ export default function App() {
       )}
     </main>
   );
-
 }
+
 
 // revealAllMines moved to Board.revealAllMines()
 

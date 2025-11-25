@@ -84,7 +84,7 @@ export class Board {
     if (!cell || cell.isFlagged || cell.isRevealed) return board;
 
     if (cell.isMine) {
-      board.revealAllMines();
+      cell.reveal();
       return board;
     }
 
