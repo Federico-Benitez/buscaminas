@@ -1,9 +1,7 @@
 import { useState } from "react";
-import { generateBoard } from "./game/generateBoard";
+import BoardClass from "./game/Board";
 import { Board as BoardComponent } from "./components/Board";
-import { floodFill } from "./game/floodFill";
-import type { Board } from "./game/types";
-import { checkVictory } from "./game/checkVictory";
+// procedural functions moved into Board OOP
 import LevelSelector from "./components/LevelSelector";
 
 export default function App() {
@@ -16,14 +14,14 @@ export default function App() {
     { id: 'custom', label: 'Personalizado', rows: 9, cols: 9, mines: 10 },
   ] as const;
 
-  const [board, setBoard] = useState(() => generateBoard(9, 9, 10));
+  const [board, setBoard] = useState(() => BoardClass.create(9, 9, 10));
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
 
   function resetGame() {
     // Reiniciar según el nivel seleccionado
     const cfg = levels.find((l) => l.id === level) ?? levels[0];
-    setBoard(generateBoard(cfg.rows, cfg.cols, cfg.mines));
+    setBoard(BoardClass.create(cfg.rows, cfg.cols, cfg.mines));
     setGameOver(false);
     setWon(false);
     setLevel(null);
@@ -33,43 +31,18 @@ export default function App() {
 
   const handleLeftClick = (x: number, y: number) => {
     if (gameOver || won) return;
-
-    const newBoard = structuredClone(board);
-    const cell = newBoard[y][x];
-
-    if (cell.isRevealed || cell.isFlagged) return;
-
-    if (cell.isMine) {
-      revealAllMines(newBoard);
+    const newBoard = board.revealAt(x, y);
+    const clickedCell = newBoard.grid[y]?.[x];
+    if (clickedCell?.isMine && clickedCell?.isRevealed) {
       setGameOver(true);
-      setBoard(newBoard);
-      return;
     }
-
-    // Si no tiene minas vecinas, usar floodFill para revelar recursivamente.
-    if (cell.neighborMines === 0) {
-      floodFill(newBoard, x, y);
-    } else {
-      cell.isRevealed = true;
-    }
-
-    // 🔥 Detectar victoria
-    if (checkVictory(newBoard)) {
-      setWon(true);
-    }
-
+    if (newBoard.checkVictory()) setWon(true);
     setBoard(newBoard);
   };
 
   const handleRightClick = (x: number, y: number) => {
     if (gameOver) return;
-
-    const newBoard = structuredClone(board);
-    const cell = newBoard[y][x];
-
-    if (cell.isRevealed) return;
-
-    cell.isFlagged = !cell.isFlagged;
+    const newBoard = board.toggleFlagAt(x, y);
     setBoard(newBoard);
   };
 
@@ -88,7 +61,7 @@ export default function App() {
       const mines = Number.isNaN(m) ? cfg.mines : Math.max(0, Math.min(rows * cols - 1, m));
 
       setLevel('custom');
-      setBoard(generateBoard(rows, cols, mines));
+      setBoard(BoardClass.create(rows, cols, mines));
       setGameOver(false);
       setWon(false);
       return;
@@ -96,7 +69,7 @@ export default function App() {
 
     // Nivel normal
     setLevel(id);
-    setBoard(generateBoard(cfg.rows, cfg.cols, cfg.mines));
+    setBoard(BoardClass.create(cfg.rows, cfg.cols, cfg.mines));
     setGameOver(false);
     setWon(false);
   }
@@ -134,14 +107,6 @@ export default function App() {
 
 }
 
-function revealAllMines(board: Board) {
-  board.forEach(row =>
-    row.forEach(cell => {
-      if (cell.isMine) {
-        cell.isRevealed = true;
-      }
-    })
-  );
-}
+// revealAllMines moved to Board.revealAllMines()
 
 

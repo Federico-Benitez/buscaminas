@@ -1,14 +1,20 @@
 import { Cell } from "./Cell";
-import type { Board } from "../game/types";
+import type BoardClass from "../game/Board";
+import type { Board as BoardType } from "../game/types";
 
 type Props = {
-    board: Board;
+    board: BoardClass | ReturnType<BoardClass["toJSON"]>;
     onCellClick: (x: number, y: number) => void;
     onCellRightClick: (x: number, y: number) => void;
 };
 
+function isBoardWithToJSON(v: unknown): v is { toJSON: () => BoardType } {
+    return typeof v === 'object' && v !== null && 'toJSON' in (v as object) && typeof ((v as { toJSON?: unknown }).toJSON) === 'function';
+}
+
 export function Board({ board, onCellClick, onCellRightClick }: Props) {
-    const cols = board[0].length
+    const boardGrid: BoardType = isBoardWithToJSON(board) ? board.toJSON() : (board as BoardType);
+    const cols = boardGrid[0].length
 
     return (
         <div className="flex justify-center items-center p-6">
@@ -16,7 +22,7 @@ export function Board({ board, onCellClick, onCellRightClick }: Props) {
                 className="grid gap-[2px] bg-neutral-700 p-2 rounded-lg w-fit mx-auto"
                 style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
             >
-                {board.map((row, y) =>
+                {boardGrid.map((row, y) =>
                     row.map((cell, x) => (
                         <Cell
                             key={`${x}-${y}`}
