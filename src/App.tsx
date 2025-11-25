@@ -4,15 +4,29 @@ import { Board as BoardComponent } from "./components/Board";
 import { floodFill } from "./game/floodFill";
 import type { Board } from "./game/types";
 import { checkVictory } from "./game/checkVictory";
+import LevelSelector from "./components/LevelSelector";
 
 export default function App() {
+  const [level, setLevel] = useState<'beginner' | 'intermediate' | 'expert' | 'custom' | null>(null);
+  // Definición de niveles y sus configuraciones
+  const levels = [
+    { id: 'beginner', label: 'Principiante (9x9, 10 minas)', rows: 9, cols: 9, mines: 10 },
+    { id: 'intermediate', label: 'Intermedio (16x16, 40 minas)', rows: 16, cols: 16, mines: 40 },
+    { id: 'expert', label: 'Experto (30x16, 99 minas)', rows: 16, cols: 30, mines: 99 },
+    { id: 'custom', label: 'Personalizado', rows: 9, cols: 9, mines: 10 },
+  ] as const;
+
   const [board, setBoard] = useState(() => generateBoard(9, 9, 10));
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
 
   function resetGame() {
-    setBoard(generateBoard(9, 9, 10));
+    // Reiniciar según el nivel seleccionado
+    const cfg = levels.find((l) => l.id === level) ?? levels[0];
+    setBoard(generateBoard(cfg.rows, cfg.cols, cfg.mines));
     setGameOver(false);
+    setWon(false);
+    setLevel(null);
   }
 
 
@@ -59,25 +73,62 @@ export default function App() {
     setBoard(newBoard);
   };
 
+  function handleSelectLevel(id: typeof levels[number]['id']) {
+    // Buscar configuración
+    const cfg = levels.find((l) => l.id === id)!;
+
+    if (id === 'custom') {
+      // Pedir al usuario valores personalizados (simple prompt).
+      const r = parseInt(window.prompt('Filas (rows) — e.g. 9') ?? String(cfg.rows), 10);
+      const c = parseInt(window.prompt('Columnas (cols) — e.g. 9') ?? String(cfg.cols), 10);
+      const m = parseInt(window.prompt('Minas (mines) — e.g. 10') ?? String(cfg.mines), 10);
+
+      const rows = Number.isNaN(r) ? cfg.rows : Math.max(1, r);
+      const cols = Number.isNaN(c) ? cfg.cols : Math.max(1, c);
+      const mines = Number.isNaN(m) ? cfg.mines : Math.max(0, Math.min(rows * cols - 1, m));
+
+      setLevel('custom');
+      setBoard(generateBoard(rows, cols, mines));
+      setGameOver(false);
+      setWon(false);
+      return;
+    }
+
+    // Nivel normal
+    setLevel(id);
+    setBoard(generateBoard(cfg.rows, cfg.cols, cfg.mines));
+    setGameOver(false);
+    setWon(false);
+  }
+
+
+
   return (
     <main className="flex flex-col justify-center h-max max-w-4xl w-full mx-auto border-2">
-      {won && (
-        <div className="text-green-700 font-bold text-xl text-center">
-          ¡Ganaste! 🎉
-        </div>
-      )}
-      <button
-        onClick={resetGame}
-        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500"
-      >
-        Reiniciar partida
-      </button>
 
-      <BoardComponent
-        board={board}
-        onCellClick={handleLeftClick}
-        onCellRightClick={handleRightClick}
-      />
+      {level === null ? (
+        <LevelSelector levels={levels.map((l) => ({ id: l.id, label: l.label }))} onSelect={handleSelectLevel} />
+      ) : (
+        <>
+          {won && (
+            <div className="text-green-700 font-bold text-xl text-center">
+              ¡Ganaste! 🎉
+            </div>
+          )}
+          <button
+            onClick={resetGame}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500"
+          >
+            Reiniciar partida
+          </button>
+          <BoardComponent
+            board={board}
+            onCellClick={handleLeftClick}
+            onCellRightClick={handleRightClick}
+          />
+
+        </>
+      )}
     </main>
   );
 
