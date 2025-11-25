@@ -43,7 +43,6 @@ export function Board({ board, onCellClick, onCellRightClick, lives, maxLives }:
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, [cols]);
-
     return (
         <div className="flex justify-center items-center p-6 w-full overflow-hidden">
             <div

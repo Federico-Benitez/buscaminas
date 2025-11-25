@@ -1,73 +1,86 @@
-# React + TypeScript + Vite
+# Trabajo Práctico Integrador - Buscaminas
+## Paradigmas de la Programación
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Este proyecto consiste en una implementación del clásico juego **Buscaminas** utilizando **React** y **TypeScript**, aplicando conceptos del paradigma **Orientado a Objetos** para la lógica del juego y **Programación Funcional/Declarativa** para la interfaz de usuario.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 🚀 Inicialización del Proyecto
 
-## React Compiler
+Para ejecutar el proyecto localmente, sigue estos pasos:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1.  **Instalar dependencias**:
+    Asegúrate de tener [Node.js](https://nodejs.org/) instalado. Luego, ejecuta en la terminal:
+    ```bash
+    npm install
+    ```
 
-## Expanding the ESLint configuration
+2.  **Ejecutar el servidor de desarrollo**:
+    ```bash
+    npm run dev
+    ```
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+3.  **Abrir en el navegador**:
+    El servidor iniciará generalmente en `http://localhost:5173/`.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### 📂 Estructura del Proyecto
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+El código fuente se encuentra en la carpeta `src/` y se divide principalmente en dos módulos: **Lógica del Juego** (`game/`) y **Componentes de UI** (`components/`).
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+#### 1. Lógica del Juego (`src/game/`)
+Aquí reside el modelo de dominio, encapsulando el estado y el comportamiento del juego bajo el paradigma Orientado a Objetos.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+*   **`Cell.ts`**:
+    *   **Rol**: Representa una celda individual del tablero.
+    *   **Responsabilidad**: Mantiene el estado interno de la celda (`isMine`, `isRevealed`, `isFlagged`, `neighborMines`) y expone métodos para modificarlo (`reveal()`, `toggleFlag()`, `setMine()`). Encapsula la lógica propia de la celda.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+*   **`Board.ts`**:
+    *   **Rol**: Representa el tablero de juego completo.
+    *   **Responsabilidad**: Gestiona la matriz de celdas (`grid`). Se encarga de la inicialización, colocación aleatoria de minas, cálculo de vecinos, y algoritmos como el *Flood Fill* (expansión automática).
+    *   **Inmutabilidad**: Para integrarse correctamente con React, los métodos que modifican el estado del tablero (`revealAt`, `toggleFlagAt`) retornan una **nueva instancia** de `Board` (patrón inmutable), permitiendo que React detecte los cambios y renderice de nuevo.
+
+#### 2. Componentes de Interfaz (`src/components/`)
+Estos componentes son responsables de la representación visual (View) y de capturar la interacción del usuario, delegando la lógica al modelo (`game/`).
+
+*   **`Board.tsx`**:
+    *   **Rol**: Renderiza la cuadrícula del tablero.
+    *   **Responsabilidad**: Recibe la instancia de `Board` y dibuja las filas y columnas. También maneja la lógica de **zoom automático** para adaptar el tablero a pantallas pequeñas sin deformarlo y contiene el componente `LivesDisplay`.
+
+*   **`Cell.tsx`**:
+    *   **Rol**: Renderiza una celda individual.
+    *   **Responsabilidad**: Muestra el estado visual de la celda (mina, número, bandera o vacía) utilizando iconos de la librería `lucide-react`. Aplica estilos condicionales (colores, animaciones) según el estado.
+
+*   **`LevelSelector.tsx`**:
+    *   **Rol**: Menú de selección de dificultad.
+    *   **Responsabilidad**: Permite al usuario elegir entre niveles predefinidos (Principiante, Intermedio, Experto) o uno Personalizado.
+
+*   **`LivesDisplay.tsx`**:
+    *   **Rol**: Contador de vidas visual.
+    *   **Responsabilidad**: Muestra las vidas restantes utilizando corazones. Implementa animaciones CSS personalizadas para cuando se pierde una vida (el corazón "tiembla y cae").
+
+#### 3. Controlador Principal (`src/App.tsx`)
+*   **Rol**: Componente raíz y orquestador.
+*   **Responsabilidad**:
+    *   Mantiene el estado global de la aplicación: instancia del `Board`, vidas, nivel actual, estado de victoria/derrota.
+    *   Vincula la lógica del juego con la interfaz: recibe los eventos de clic de los componentes y llama a los métodos correspondientes del objeto `Board`.
+    *   Gestiona el flujo del juego (Game Loop): verifica condiciones de victoria/derrota tras cada movimiento.
+
+---
+
+### 🎨 Estética y Diseño
+El proyecto cuenta con una estética **"Retro Gamer 80s"**, caracterizada por:
+*   Tipografías monoespaciadas.
+*   Colores de alto contraste (Verde Neón sobre fondo oscuro).
+*   Sombras duras (pixel-art style) en botones y contenedores.
+*   Animaciones CSS para interactividad y feedback visual.
+
+---
+
+### 🛠 Tecnologías Utilizadas
+*   **React**: Librería para la construcción de la UI.
+*   **TypeScript**: Superset de JavaScript para tipado estático y mayor robustez.
+*   **Tailwind CSS**: Framework de utilidades para el estilizado rápido y responsivo.
+*   **Lucide React**: Librería de iconos vectoriales.
+*   **Vite**: Entorno de desarrollo y empaquetador.
