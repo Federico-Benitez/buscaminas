@@ -22,7 +22,7 @@ export class Board {
     }
   }
 
-  static create(rows: number, cols: number, mines: number) {
+  static create(rows: number, cols: number, mines: number, hiddenLives: number = 0) {
     const board = new Board(rows, cols, mines);
 
     // place mines
@@ -34,6 +34,22 @@ export class Board {
       if (!cell.isMine) {
         cell.setMine();
         minesPlaced++;
+      }
+    }
+
+    // place hidden lives
+    let livesPlaced = 0;
+    // Safety check: ensure we don't loop forever if too many lives requested
+    const maxLives = (rows * cols) - mines;
+    const actualLives = Math.min(hiddenLives, maxLives);
+
+    while (livesPlaced < actualLives) {
+      const x = Math.floor(Math.random() * cols);
+      const y = Math.floor(Math.random() * rows);
+      const cell = board.grid[y][x];
+      if (!cell.isMine && !cell.isLife) {
+        cell.isLife = true;
+        livesPlaced++;
       }
     }
 
@@ -163,7 +179,8 @@ export class Board {
       isMine: cell.isMine,
       isRevealed: cell.isRevealed,
       isFlagged: cell.isFlagged,
-      neighborMines: cell.neighborMines
+      neighborMines: cell.neighborMines,
+      isLife: cell.isLife
     })));
   }
 }

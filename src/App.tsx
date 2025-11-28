@@ -13,10 +13,10 @@ export default function App() {
 
   // Definición de niveles y sus configuraciones
   const levels = [
-    { id: 'beginner', label: 'Principiante (9x9, 10 minas, 3 vidas)', rows: 9, cols: 9, mines: 10, lives: 3 },
-    { id: 'intermediate', label: 'Intermedio (16x16, 40 minas, 2 vidas)', rows: 16, cols: 16, mines: 40, lives: 2 },
-    { id: 'expert', label: 'Experto (30x16, 99 minas, 1 vida)', rows: 16, cols: 30, mines: 99, lives: 1 },
-    { id: 'custom', label: 'Personalizado', rows: 9, cols: 9, mines: 10, lives: 1 },
+    { id: 'beginner', label: 'Principiante (9x9, 10 minas, 3 vidas)', rows: 9, cols: 9, mines: 10, lives: 3, hiddenLives: 1 },
+    { id: 'intermediate', label: 'Intermedio (16x16, 40 minas, 2 vidas)', rows: 16, cols: 16, mines: 40, lives: 2, hiddenLives: 2 },
+    { id: 'expert', label: 'Experto (30x16, 99 minas, 1 vida)', rows: 16, cols: 30, mines: 99, lives: 1, hiddenLives: 3 },
+    { id: 'custom', label: 'Personalizado', rows: 9, cols: 9, mines: 10, lives: 1, hiddenLives: 0 },
   ] as const;
 
   const [board, setBoard] = useState(() => BoardClass.create(9, 9, 10));
@@ -26,7 +26,7 @@ export default function App() {
   function resetGame() {
     // Reiniciar según el nivel seleccionado
     const cfg = levels.find((l) => l.id === level) ?? levels[0];
-    setBoard(BoardClass.create(cfg.rows, cfg.cols, cfg.mines));
+    setBoard(BoardClass.create(cfg.rows, cfg.cols, cfg.mines, cfg.hiddenLives));
     setLives(cfg.lives);
     setMaxLives(cfg.lives);
     setGameOver(false);
@@ -50,6 +50,20 @@ export default function App() {
 
     const newBoard = board.revealAt(x, y);
     const clickedCell = newBoard.grid[y]?.[x];
+
+    // Check for newly revealed lives
+    let livesFound = 0;
+    newBoard.forEachCell((cell) => {
+      const oldCell = board.grid[cell.y][cell.x];
+      if (cell.isRevealed && !oldCell.isRevealed && cell.isLife) {
+        livesFound++;
+      }
+    });
+
+    if (livesFound > 0) {
+      setLives(l => l + livesFound);
+      setMessage("¡Encontraste una vida extra! ❤️");
+    }
 
     if (clickedCell?.isMine && clickedCell?.isRevealed) {
       if (lives > 1) {
@@ -99,7 +113,7 @@ export default function App() {
 
     // Nivel normal
     setLevel(id);
-    setBoard(BoardClass.create(cfg.rows, cfg.cols, cfg.mines));
+    setBoard(BoardClass.create(cfg.rows, cfg.cols, cfg.mines, cfg.hiddenLives));
     setLives(cfg.lives);
     setMaxLives(cfg.lives);
     setGameOver(false);

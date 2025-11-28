@@ -7,6 +7,7 @@ export class Cell implements CellType {
   isRevealed: boolean;
   isFlagged: boolean;
   neighborMines: number;
+  isLife: boolean;
 
   constructor(x: number, y: number) {
     this.x = x;
@@ -15,6 +16,7 @@ export class Cell implements CellType {
     this.isRevealed = false;
     this.isFlagged = false;
     this.neighborMines = 0;
+    this.isLife = false;
   }
 
   reveal() {
@@ -39,6 +41,7 @@ export class Cell implements CellType {
     c.isRevealed = this.isRevealed;
     c.isFlagged = this.isFlagged;
     c.neighborMines = this.neighborMines;
+    c.isLife = this.isLife;
     return c;
   }
 }

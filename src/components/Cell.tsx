@@ -1,5 +1,5 @@
 import type { Cell as CellType } from "../game/types";
-import { Bomb, Flag } from "lucide-react";
+import { Bomb, Flag, Heart } from "lucide-react";
 
 type Props = {
   cell: CellType;
@@ -35,6 +35,11 @@ export function Cell({ cell, onClick, onRightClick }: Props) {
         )}
         {cell.isRevealed && !cell.isMine && cell.neighborMines > 0 && (
           cell.neighborMines
+        )}
+        {cell.isRevealed && cell.isLife && !cell.isMine && (
+          <span className="absolute top-0 right-0 p-[2px]">
+            <Heart size={12} className="text-red-500 fill-red-500" />
+          </span>
         )}
         {!cell.isRevealed && cell.isFlagged && (
           <span className="flex items-center justify-center">

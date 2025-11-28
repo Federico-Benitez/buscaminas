@@ -5,6 +5,7 @@ export type Cell = {
   isRevealed: boolean;
   isFlagged: boolean;
   neighborMines: number;
+  isLife: boolean;
 };
 
 export type Board = Cell[][];
