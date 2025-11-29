@@ -1,13 +1,11 @@
 import { useState } from "react";
-import BoardClass from "./game/Board";
+import GameClass from "./game/Game";
 import { Board as BoardComponent } from "./components/Board";
 // procedural functions moved into Board OOP
 import LevelSelector from "./components/LevelSelector";
 import { useEffect } from "react";
 
 export default function App() {
-  const [lives, setLives] = useState(0);
-  const [maxLives, setMaxLives] = useState(0);
   const [level, setLevel] = useState<'beginner' | 'intermediate' | 'expert' | 'custom' | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -19,18 +17,12 @@ export default function App() {
     { id: 'custom', label: 'Personalizado', rows: 9, cols: 9, mines: 10, lives: 1, hiddenLives: 0 },
   ] as const;
 
-  const [board, setBoard] = useState(() => BoardClass.create(9, 9, 10));
-  const [gameOver, setGameOver] = useState(false);
-  const [won, setWon] = useState(false);
+  const [game, setGame] = useState(() => GameClass.create(9, 9, 10, 3));
 
   function resetGame() {
     // Reiniciar según el nivel seleccionado
     const cfg = levels.find((l) => l.id === level) ?? levels[0];
-    setBoard(BoardClass.create(cfg.rows, cfg.cols, cfg.mines, cfg.hiddenLives));
-    setLives(cfg.lives);
-    setMaxLives(cfg.lives);
-    setGameOver(false);
-    setWon(false);
+    setGame(GameClass.create(cfg.rows, cfg.cols, cfg.mines, cfg.lives, cfg.hiddenLives));
     setMessage(null);
     setLevel(null);
   }
@@ -43,48 +35,27 @@ export default function App() {
   }, [message]);
 
   const handleLeftClick = (x: number, y: number) => {
-    if (gameOver || won) return;
+    if (game.gameState !== 'playing') return;
 
     // Clear message on new interaction
     if (message) setMessage(null);
 
-    const newBoard = board.revealAt(x, y);
-    const clickedCell = newBoard.grid[y]?.[x];
+    const oldLives = game.lives.count;
+    const newGame = game.revealAt(x, y);
 
-    // Check for newly revealed lives
-    let livesFound = 0;
-    newBoard.forEachCell((cell) => {
-      const oldCell = board.grid[cell.y][cell.x];
-      if (cell.isRevealed && !oldCell.isRevealed && cell.isLife) {
-        livesFound++;
-      }
-    });
-
-    if (livesFound > 0) {
-      setLives(l => l + livesFound);
+    if (newGame.lives.count > oldLives) {
       setMessage("¡Encontraste una vida extra! ❤️");
+    } else if (newGame.lives.count < oldLives && newGame.gameState === 'playing') {
+      setMessage("¡Cuidado! Perdiste una vida 💔");
     }
 
-    if (clickedCell?.isMine && clickedCell?.isRevealed) {
-      if (lives > 1) {
-        setLives(l => l - 1);
-        setMessage("¡Cuidado! Perdiste una vida 💔");
-        // We keep the mine revealed but don't end the game
-      } else {
-        setLives(0);
-        setGameOver(true);
-        newBoard.revealAllMines();
-      }
-    }
-
-    if (newBoard.checkVictory()) setWon(true);
-    setBoard(newBoard);
+    setGame(newGame);
   };
 
   const handleRightClick = (x: number, y: number) => {
-    if (gameOver) return;
-    const newBoard = board.toggleFlagAt(x, y);
-    setBoard(newBoard);
+    if (game.gameState !== 'playing') return;
+    const newGame = game.toggleFlagAt(x, y);
+    setGame(newGame);
   };
 
   function handleSelectLevel(id: typeof levels[number]['id']) {
@@ -102,22 +73,15 @@ export default function App() {
       const mines = Number.isNaN(m) ? cfg.mines : Math.max(0, Math.min(rows * cols - 1, m));
 
       setLevel('custom');
-      setBoard(BoardClass.create(rows, cols, mines));
-      setLives(1); // Custom level gets 1 life by default
-      setMaxLives(1);
-      setGameOver(false);
-      setWon(false);
+      setGame(GameClass.create(rows, cols, mines, 1)); // Custom level gets 1 life by default
       setMessage(null);
       return;
     }
 
     // Nivel normal
+    // Nivel normal
     setLevel(id);
-    setBoard(BoardClass.create(cfg.rows, cfg.cols, cfg.mines, cfg.hiddenLives));
-    setLives(cfg.lives);
-    setMaxLives(cfg.lives);
-    setGameOver(false);
-    setWon(false);
+    setGame(GameClass.create(cfg.rows, cfg.cols, cfg.mines, cfg.lives, cfg.hiddenLives));
     setMessage(null);
   }
 
@@ -136,7 +100,7 @@ export default function App() {
             )}
           </div>
 
-          {won && (
+          {game.gameState === 'won' && (
             <div className="
               font-mono font-bold text-3xl text-center uppercase tracking-[0.2em]
               text-green-400 drop-shadow-[3px_3px_0_#14532d]
@@ -146,7 +110,7 @@ export default function App() {
               ¡Ganaste! 🎉
             </div>
           )}
-          {gameOver && (
+          {game.gameState === 'lost' && (
             <div className="
               font-mono font-bold text-3xl text-center uppercase tracking-[0.2em]
               text-red-500 drop-shadow-[3px_3px_0_#7f1d1d]
@@ -173,9 +137,9 @@ export default function App() {
             Reiniciar partida
           </button>
           <BoardComponent
-            board={board}
-            lives={lives}
-            maxLives={maxLives}
+            board={game}
+            lives={game.lives.count}
+            maxLives={game.lives.maxLives}
             onCellClick={handleLeftClick}
             onCellRightClick={handleRightClick}
           />

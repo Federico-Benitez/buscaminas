@@ -1,11 +1,11 @@
 import { Cell } from "./Cell";
-import type BoardClass from "../game/Board";
+import type GameClass from "../game/Game";
 import type { Board as BoardType } from "../game/types";
 import { LivesDisplay } from "./LivesDisplay";
 import { useEffect, useState, useRef } from "react";
 
 type Props = {
-    board: BoardClass | ReturnType<BoardClass["toJSON"]>;
+    board: GameClass | ReturnType<GameClass["toJSON"]>;
     onCellClick: (x: number, y: number) => void;
     onCellRightClick: (x: number, y: number) => void;
     lives: number;

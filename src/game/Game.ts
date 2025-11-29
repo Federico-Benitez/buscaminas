@@ -1,17 +1,25 @@
 import { Cell } from "./Cell";
 import type { Board as BoardType } from "./types";
 
-export class Board {
+import { Lives } from "./Lives";
+import { Score } from "./Score";
+
+export class Game {
   rows: number;
   cols: number;
   mines: number;
   grid: Cell[][];
+  lives: Lives;
+  score: Score;
+  gameState: 'playing' | 'won' | 'lost' = 'playing';
 
   constructor(rows: number, cols: number, mines: number) {
     this.rows = rows;
     this.cols = cols;
     this.mines = mines;
     this.grid = [];
+    this.lives = new Lives(0); // Default, will be set in create
+    this.score = new Score();
 
     for (let y = 0; y < rows; y++) {
       const row: Cell[] = [];
@@ -22,15 +30,16 @@ export class Board {
     }
   }
 
-  static create(rows: number, cols: number, mines: number, hiddenLives: number = 0) {
-    const board = new Board(rows, cols, mines);
+  static create(rows: number, cols: number, mines: number, lives: number, hiddenLives: number = 0) {
+    const game = new Game(rows, cols, mines);
+    game.lives = new Lives(lives);
 
     // place mines
     let minesPlaced = 0;
     while (minesPlaced < mines) {
       const x = Math.floor(Math.random() * cols);
       const y = Math.floor(Math.random() * rows);
-      const cell = board.grid[y][x];
+      const cell = game.grid[y][x];
       if (!cell.isMine) {
         cell.setMine();
         minesPlaced++;
@@ -46,7 +55,7 @@ export class Board {
     while (livesPlaced < actualLives) {
       const x = Math.floor(Math.random() * cols);
       const y = Math.floor(Math.random() * rows);
-      const cell = board.grid[y][x];
+      const cell = game.grid[y][x];
       if (!cell.isMine && !cell.isLife) {
         cell.isLife = true;
         livesPlaced++;
@@ -56,15 +65,15 @@ export class Board {
     // count neighbors
     for (let y = 0; y < rows; y++) {
       for (let x = 0; x < cols; x++) {
-        const cell = board.grid[y][x];
+        const cell = game.grid[y][x];
         if (!cell.isMine) {
-          const count = board.countNeighbors(x, y);
+          const count = game.countNeighbors(x, y);
           cell.setNeighborCount(count);
         }
       }
     }
 
-    return board;
+    return game;
   }
 
   countNeighbors(x: number, y: number) {
@@ -84,43 +93,71 @@ export class Board {
   }
 
   clone() {
-    const b = new Board(this.rows, this.cols, this.mines);
+    const g = new Game(this.rows, this.cols, this.mines);
+    g.lives = this.lives.clone();
+    g.score = this.score.clone();
+    g.gameState = this.gameState;
     for (let y = 0; y < this.rows; y++) {
       for (let x = 0; x < this.cols; x++) {
-        b.grid[y][x] = this.grid[y][x].clone();
+        g.grid[y][x] = this.grid[y][x].clone();
       }
     }
-    return b;
+    return g;
   }
 
-  // Reveal cell at (x, y). Returns new Board instance.
+  // Reveal cell at (x, y). Returns new Game instance.
   revealAt(x: number, y: number) {
-    const board = this.clone();
-    const cell = board.grid[y]?.[x];
-    if (!cell || cell.isFlagged || cell.isRevealed) return board;
+    const game = this.clone();
+    if (game.gameState !== 'playing') return game;
 
+    const cell = game.grid[y]?.[x];
+    if (!cell || cell.isFlagged || cell.isRevealed) return game;
+
+    // Logic for revealing a mine
     if (cell.isMine) {
       cell.reveal();
-      return board;
+      if (!game.lives.isEmpty()) {
+        game.lives.loseLife();
+        if (game.lives.isEmpty()) {
+          game.gameState = 'lost';
+          game.revealAllMines();
+        }
+      } else {
+         game.gameState = 'lost';
+         game.revealAllMines();
+      }
+      return game;
     }
 
-    // If there are no neighbor mines, expand
+    // Logic for revealing a safe cell
+    cell.reveal();
+    game.score.add(10); // 10 points per cell
+
+    if (cell.isLife) {
+      game.lives.gainLife();
+      game.score.add(50); // Bonus for finding a life
+    }
+
     if (cell.neighborMines === 0) {
-      board.floodFill(x, y);
-    } else {
-      cell.reveal();
+      game.floodFill(x, y);
     }
 
-    return board;
+    if (game.checkVictory()) {
+      game.gameState = 'won';
+    }
+
+    return game;
   }
 
   // Toggle flag at (x, y)
   toggleFlagAt(x: number, y: number) {
-    const board = this.clone();
-    const cell = board.grid[y]?.[x];
-    if (!cell || cell.isRevealed) return board;
+    const game = this.clone();
+    if (game.gameState !== 'playing') return game;
+
+    const cell = game.grid[y]?.[x];
+    if (!cell || cell.isRevealed) return game;
     cell.toggleFlag();
-    return board;
+    return game;
   }
 
   revealAllMines() {
@@ -144,6 +181,7 @@ export class Board {
 
   private floodFill(x: number, y: number) {
     const stack = [{ x, y }];
+    // Note: floodFill operates on 'this' because it's called on a cloned instance
 
     while (stack.length) {
       const { x, y } = stack.pop()!;
@@ -151,6 +189,12 @@ export class Board {
       if (!cell || cell.isRevealed || cell.isFlagged) continue;
 
       cell.reveal();
+      this.score.add(10); // Points for flood filled cells
+
+      if (cell.isLife) {
+        this.lives.gainLife();
+        this.score.add(50);
+      }
 
       if (cell.neighborMines > 0) continue;
 
@@ -185,4 +229,4 @@ export class Board {
   }
 }
 
-export default Board;
+export default Game;
