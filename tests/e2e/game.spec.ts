@@ -45,5 +45,43 @@ test.describe('Minesweeper Game', () => {
     // resetGame sets level to null, so we should see the level selector again
     await expect(page.getByText('Seleccione Nivel')).toBeVisible();
   });
+
+  test('should auto-reveal adjacent cells (flood fill) when clicking empty cell', async ({ page }) => {
+    await page.getByText(/Principiante/).click();
+    
+    // Count initially revealed cells (should be 0)
+    let revealedCells = await page.locator('button.w-10.h-10.bg-gray-300').count();
+    expect(revealedCells).toBe(0);
+    
+    // Click a cell - if it's empty (0 neighbors), it should trigger flood fill
+    // We'll click multiple cells until we find an empty one that triggers flood fill
+    const cells = await page.locator('button.w-10.h-10').all();
+    
+    let foundFloodFill = false;
+    for (let i = 0; i < Math.min(cells.length, 20); i++) {
+      const cell = cells[i];
+      await cell.click();
+      
+      // Wait a bit for the reveal animation
+      await page.waitForTimeout(100);
+      
+      // Count revealed cells
+      revealedCells = await page.locator('button.w-10.h-10.bg-gray-300').count();
+      
+      // If more than 1 cell was revealed, we found flood fill
+      if (revealedCells > 1) {
+        foundFloodFill = true;
+        break;
+      }
+      
+      // Reset for next attempt
+      await page.getByText('Reiniciar partida').click();
+      await page.getByText(/Principiante/).click();
+    }
+    
+    // Verify that flood fill occurred at least once
+    expect(foundFloodFill).toBe(true);
+    expect(revealedCells).toBeGreaterThan(1);
+  });
 });
 

@@ -130,16 +130,18 @@ export class Game {
     }
 
     // Logic for revealing a safe cell
-    cell.reveal();
-    game.score.add(10); // 10 points per cell
-
-    if (cell.isLife) {
-      game.lives.gainLife();
-      game.score.add(50); // Bonus for finding a life
-    }
-
+    // If cell has no neighbor mines, use flood fill to reveal all connected empty cells
     if (cell.neighborMines === 0) {
       game.floodFill(x, y);
+    } else {
+      // Just reveal this single cell
+      cell.reveal();
+      game.score.add(10);
+      
+      if (cell.isLife) {
+        game.lives.gainLife();
+        game.score.add(50);
+      }
     }
 
     if (game.checkVictory()) {
