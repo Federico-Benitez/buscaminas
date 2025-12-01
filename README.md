@@ -49,6 +49,7 @@ classDiagram
         +gainLife() void
         +isEmpty() boolean
         +reset(lives) void
+        +clone() Lives
     }
 
     class Score {
