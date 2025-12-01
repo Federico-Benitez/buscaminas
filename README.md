@@ -69,10 +69,10 @@ classDiagram
 
 El principio de encapsulación se aplica consistentemente en todas las clases del sistema. Cada entidad mantiene su estado interno como propiedades privadas y expone únicamente métodos públicos para su manipulación controlada:
 
-- **`Cell`**: Encapsula el estado de una celda individual (mina, revelada, bandera) y proporciona métodos específicos para su modificación.
-- **`Lives`**: Gestiona el contador de vidas del jugador, implementando validaciones internas para garantizar la integridad del estado.
-- **`Score`**: Controla el sistema de puntuación mediante una interfaz pública restringida.
-- **`Game`**: Actúa como clase orquestadora, encapsulando la lógica completa del juego y las reglas de negocio.
+- **`Cell`**: Encapsula el estado de una celda individual (mina, revelada, bandera, vida oculta) y proporciona métodos específicos para su modificación.
+- **`Lives`**: Gestiona el contador de vidas del jugador con un sistema de vidas iniciales y máximas. Implementa validaciones internas para garantizar la integridad del estado y métodos para ganar/perder vidas.
+- **`Score`**: Controla el sistema de puntuación mediante una interfaz pública restringida, otorgando puntos por celdas reveladas y bonificaciones por vidas encontradas.
+- **`Game`**: Actúa como clase orquestadora, encapsulando la lógica completa del juego, las reglas de negocio, y la coordinación entre el sistema de vidas, puntuación y estado del tablero.
 
 #### 2. **Composición sobre Herencia**
 
@@ -125,11 +125,82 @@ El flujo de ejecución del sistema sigue el siguiente proceso secuencial:
 4. **Procesamiento de Lógica de Negocio**: La clase `Game` ejecuta:
    - Clonación del estado actual para preservar inmutabilidad
    - Revelación de la celda seleccionada
+   - Si la celda es una mina: pérdida de una vida y verificación de game over
+   - Si la celda es segura: otorgamiento de puntos (10 por celda)
+   - Si la celda contiene una vida oculta: ganancia de vida adicional y bonificación de 50 puntos
    - Actualización de las instancias `Lives` y `Score` según corresponda
    - Verificación de condiciones de victoria o derrota
 5. **Retorno de Estado**: El modelo retorna una nueva instancia con el estado actualizado.
 6. **Actualización de Estado**: El controlador actualiza el estado mediante `setGame(newGame)`.
 7. **Re-renderizado**: React detecta el cambio de referencia y ejecuta el ciclo de renderizado de la vista.
+
+---
+
+## 🎮 Sistema de Vidas y Puntuación
+
+### Sistema de Vidas
+
+El juego implementa un innovador **sistema de vidas** que añade una capa estratégica adicional al Buscaminas clásico:
+
+#### Vidas Iniciales
+- Cada nivel de dificultad comienza con un número configurable de vidas
+- Las vidas se muestran visualmente mediante corazones en la interfaz
+- El contador de vidas incluye animaciones CSS cuando se pierde una vida (efecto de "caída")
+
+#### Vidas Ocultas
+- El tablero contiene **vidas ocultas** distribuidas aleatoriamente en celdas seguras (no-minas)
+- Estas vidas son invisibles hasta que el jugador revela la celda que las contiene
+- Al encontrar una vida oculta:
+  - Se incrementa el contador de vidas del jugador
+  - Se otorga una bonificación de **50 puntos**
+  - La celda se marca visualmente (puede implementarse un ícono especial)
+
+#### Mecánica de Pérdida de Vidas
+- Al revelar una celda con mina:
+  - Se pierde **1 vida**
+  - La mina se revela visualmente
+  - Si quedan vidas disponibles, el juego continúa
+  - Si no quedan vidas (`lives.isEmpty()`), el juego termina en derrota
+
+#### Implementación Técnica
+
+La clase `Lives` gestiona el estado de vidas:
+
+```typescript
+class Lives {
+  count: number;      // Vidas actuales
+  maxLives: number;   // Vidas iniciales del nivel
+  
+  loseLife()   // Decrementa el contador
+  gainLife()   // Incrementa el contador
+  isEmpty()    // Verifica si quedan vidas
+  clone()      // Crea copia para inmutabilidad
+}
+```
+
+La inicialización del juego permite configurar tanto las vidas iniciales como las vidas ocultas:
+
+```typescript
+Game.create(rows, cols, mines, lives, hiddenLives)
+```
+
+### Sistema de Puntuación
+
+El juego implementa un sistema de puntos que recompensa la exploración estratégica:
+
+- **10 puntos** por cada celda segura revelada
+- **50 puntos** de bonificación al encontrar una vida oculta
+- El puntaje se acumula durante toda la partida
+- La clase `Score` encapsula la lógica de puntuación
+
+### Estrategia de Juego
+
+El sistema de vidas transforma la experiencia de juego:
+
+1. **Tolerancia al Error**: Los jugadores pueden cometer errores sin perder inmediatamente
+2. **Exploración Recompensada**: Buscar vidas ocultas añade un objetivo secundario
+3. **Gestión de Riesgo**: Los jugadores deben decidir cuándo arriesgarse y cuándo ser conservadores
+4. **Progresión**: Las vidas ocultas permiten recuperarse de errores anteriores
 
 ---
 
@@ -162,19 +233,33 @@ Aquí reside el modelo de dominio, encapsulando el estado y el comportamiento de
 
 *   **`Cell.ts`**:
     *   **Rol**: Representa una celda individual del tablero.
-    *   **Responsabilidad**: Mantiene el estado interno de la celda (`isMine`, `isRevealed`, `isFlagged`, `neighborMines`) y expone métodos para modificarlo (`reveal()`, `toggleFlag()`, `setMine()`). Encapsula la lógica propia de la celda.
+    *   **Responsabilidad**: Mantiene el estado interno de la celda (`isMine`, `isRevealed`, `isFlagged`, `isLife`, `neighborMines`) y expone métodos para modificarlo (`reveal()`, `toggleFlag()`, `setMine()`). La propiedad `isLife` indica si la celda contiene una vida oculta. Encapsula la lógica propia de la celda.
 
-*   **`Board.ts`**:
-    *   **Rol**: Representa el tablero de juego completo.
-    *   **Responsabilidad**: Gestiona la matriz de celdas (`grid`). Se encarga de la inicialización, colocación aleatoria de minas, cálculo de vecinos, y algoritmos como el *Flood Fill* (expansión automática).
-    *   **Inmutabilidad**: Para integrarse correctamente con React, los métodos que modifican el estado del tablero (`revealAt`, `toggleFlagAt`) retornan una **nueva instancia** de `Board` (patrón inmutable), permitiendo que React detecte los cambios y renderice de nuevo.
+*   **`Game.ts`**:
+    *   **Rol**: Representa el juego completo (anteriormente `Board.ts`).
+    *   **Responsabilidad**: Gestiona la matriz de celdas (`grid`), el sistema de vidas (`Lives`), y la puntuación (`Score`). Se encarga de:
+        - Inicialización del tablero
+        - Colocación aleatoria de minas y vidas ocultas
+        - Cálculo de vecinos
+        - Algoritmos como el *Flood Fill* (expansión automática)
+        - Lógica de revelación de celdas con gestión de vidas y puntos
+        - Verificación de condiciones de victoria/derrota
+    *   **Inmutabilidad**: Para integrarse correctamente con React, los métodos que modifican el estado del juego (`revealAt`, `toggleFlagAt`) retornan una **nueva instancia** de `Game` (patrón inmutable), permitiendo que React detecte los cambios y renderice de nuevo.
+
+*   **`Lives.ts`**:
+    *   **Rol**: Gestiona el sistema de vidas del jugador.
+    *   **Responsabilidad**: Mantiene el contador de vidas actuales y máximas, proporciona métodos para ganar/perder vidas y verificar si el jugador ha perdido todas sus vidas.
+
+*   **`Score.ts`**:
+    *   **Rol**: Gestiona el sistema de puntuación.
+    *   **Responsabilidad**: Acumula puntos durante el juego y proporciona métodos para añadir puntos y reiniciar el contador.
 
 #### 2. Componentes de Interfaz (`src/components/`)
 Estos componentes son responsables de la representación visual (View) y de capturar la interacción del usuario, delegando la lógica al modelo (`game/`).
 
 *   **`Board.tsx`**:
     *   **Rol**: Renderiza la cuadrícula del tablero.
-    *   **Responsabilidad**: Recibe la instancia de `Board` y dibuja las filas y columnas. También maneja la lógica de **zoom automático** para adaptar el tablero a pantallas pequeñas sin deformarlo y contiene el componente `LivesDisplay`.
+    *   **Responsabilidad**: Recibe la instancia de `Game` y dibuja las filas y columnas. También maneja la lógica de **zoom automático** para adaptar el tablero a pantallas pequeñas sin deformarlo y contiene el componente `LivesDisplay`.
 
 *   **`Cell.tsx`**:
     *   **Rol**: Renderiza una celda individual.
@@ -186,14 +271,15 @@ Estos componentes son responsables de la representación visual (View) y de capt
 
 *   **`LivesDisplay.tsx`**:
     *   **Rol**: Contador de vidas visual.
-    *   **Responsabilidad**: Muestra las vidas restantes utilizando corazones. Implementa animaciones CSS personalizadas para cuando se pierde una vida (el corazón "tiembla y cae").
+    *   **Responsabilidad**: Muestra las vidas restantes y máximas utilizando corazones (iconos de `lucide-react`). Implementa una técnica de **doble capa** con corazones vacíos de fondo y corazones rellenos en primer plano. Cuando se pierde una vida, el corazón correspondiente se anima con el efecto `animate-heart-drop` (definido en CSS) que simula que el corazón "cae" y desaparece.
 
 #### 3. Controlador Principal (`src/App.tsx`)
 *   **Rol**: Componente raíz y orquestador.
 *   **Responsabilidad**:
-    *   Mantiene el estado global de la aplicación: instancia del `Board`, vidas, nivel actual, estado de victoria/derrota.
-    *   Vincula la lógica del juego con la interfaz: recibe los eventos de clic de los componentes y llama a los métodos correspondientes del objeto `Board`.
+    *   Mantiene el estado global de la aplicación: instancia del `Game`, nivel actual, estado de victoria/derrota.
+    *   Vincula la lógica del juego con la interfaz: recibe los eventos de clic de los componentes y llama a los métodos correspondientes del objeto `Game`.
     *   Gestiona el flujo del juego (Game Loop): verifica condiciones de victoria/derrota tras cada movimiento.
+    *   Coordina la actualización de vidas y puntuación a través del modelo `Game`.
 
 ---
 
