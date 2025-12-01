@@ -54,10 +54,7 @@ export function Board({ board, onCellClick, onCellRightClick, lives, maxLives }:
 
 
     return (
-        <div className={cx("flex items-center p-2 sm:p-6 w-full", {
-            "justify-center overflow-hidden": !isBigBoard,
-            "overflow-x-auto justify-start": isBigBoard
-        })}>
+        <div className={"flex items-center p-2 sm:p-6 w-full" + (isBigBoard ? "overflow-x-auto justify-start" : "justify-center overflow-hidden")}>
             <div
                 ref={containerRef}
                 className="transition-transform duration-200 origin-top mx-auto"
@@ -89,6 +86,6 @@ export function Board({ board, onCellClick, onCellRightClick, lives, maxLives }:
                 </div>
                 <LivesDisplay lives={lives} maxLives={maxLives} />
             </div>
-        </div>
+        </div >
     );
 }
