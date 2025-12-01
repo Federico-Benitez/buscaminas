@@ -1,8 +1,10 @@
+import { clsx as cx } from "clsx";
 import { Cell } from "./Cell";
 import type GameClass from "../game/Game";
 import type { Board as BoardType } from "../game/types";
 import { LivesDisplay } from "./LivesDisplay";
 import { useEffect, useState, useRef } from "react";
+
 
 type Props = {
     board: GameClass | ReturnType<GameClass["toJSON"]>;
@@ -20,30 +22,28 @@ export function Board({ board, onCellClick, onCellRightClick, lives, maxLives }:
     const boardGrid: BoardType = isBoardWithToJSON(board) ? board.toJSON() : (board as BoardType);
     const cols = boardGrid[0].length;
     const containerRef = useRef<HTMLDivElement>(null);
+    const isBigBoard = cols > 9;
     const [scale, setScale] = useState(1);
 
     useEffect(() => {
+        if (isBigBoard) {
+            return;
+        }
+
         const handleResize = () => {
             if (!containerRef.current) return;
 
-            // Calculate required width more accurately:
-            // - Each cell: 40px (w-10)
-            // - Gap between cells: 2px
-            // - Board padding: 8px on each side (p-2 = 0.5rem = 8px)
-            // Total width = (cols * 40) + ((cols - 1) * 2) + (2 * 8)
-            const cellWidth = 40;
-            const gapWidth = 2;
-            const boardPadding = 16; // p-2 on both sides
-            const boardWidth = (cols * cellWidth) + ((cols - 1) * gapWidth) + boardPadding;
+            const boardEl = containerRef.current.querySelector('.board-grid');
+            if (!boardEl) return;
 
-            // Available width with some margin for safety
-            const isMobile = window.innerWidth < 640; // sm breakpoint
-            const horizontalMargin = isMobile ? 16 : 48; // Less margin on mobile
-            const availableWidth = window.innerWidth - horizontalMargin;
+            const rect = boardEl.getBoundingClientRect();
+            const boardWidth = rect.width;
 
-            if (boardWidth > availableWidth) {
-                // Add a small buffer to prevent edge cases
-                setScale((availableWidth / boardWidth) * 0.98);
+            const margin = 24; // small safety margin
+            const available = window.innerWidth - margin;
+
+            if (boardWidth > available) {
+                setScale((available / boardWidth) * 0.98);
             } else {
                 setScale(1);
             }
@@ -52,17 +52,29 @@ export function Board({ board, onCellClick, onCellRightClick, lives, maxLives }:
         handleResize();
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
-    }, [cols]);
+    }, [cols, isBigBoard]);
+
+
     return (
-        <div className="flex justify-center items-center p-2 sm:p-6 w-full overflow-hidden">
+        <div className={cx("flex items-center p-2 sm:p-6 w-full", {
+            "justify-center overflow-hidden": !isBigBoard,
+            "overflow-x-auto justify-start": isBigBoard
+        })}>
             <div
                 ref={containerRef}
-                className="relative transition-transform duration-200 origin-center"
-                style={{ transform: `scale(${scale})` }}
+                className="transition-transform duration-200 origin-top"
+                style={{ transform: `scale(${isBigBoard ? 1 : scale})` }}
             >
                 <div
-                    className="grid gap-[2px] bg-neutral-700 p-2 rounded-lg w-fit mx-auto"
-                    style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+                    className={cx("board-grid grid gap-[2px] bg-neutral-700 p-2 rounded-lg mx-auto w-full", {
+                        "max-w-[360px]": !isBigBoard,
+                        "sm:max-w-[480px]": !isBigBoard,
+                        "md:max-w-full": !isBigBoard,
+                        "w-max": isBigBoard
+                    })}
+                    style={{
+                        gridTemplateColumns: `repeat(${cols}, minmax(18px, 1fr))`,
+                    }}
                 >
                     {boardGrid.map((row, y) =>
                         row.map((cell, x) => (
