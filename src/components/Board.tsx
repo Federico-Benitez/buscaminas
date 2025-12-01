@@ -62,12 +62,12 @@ export function Board({ board, onCellClick, onCellRightClick, lives, maxLives }:
         })}>
             <div
                 ref={containerRef}
-                className="transition-transform duration-200 origin-top"
+                className="transition-transform duration-200 origin-top mx-auto"
                 style={{ transform: `scale(${isBigBoard ? 1 : scale})` }}
             >
                 <div
-                    className={cx("board-grid grid gap-[2px] bg-neutral-700 p-2 rounded-lg mx-auto w-full", {
-                        "max-w-[360px]": !isBigBoard,
+                    className={cx("board-grid grid gap-[2px] bg-neutral-700 p-2 rounded-lg mx-auto", {
+                        "max-w-[360px] w-full": !isBigBoard,
                         "sm:max-w-[480px]": !isBigBoard,
                         "md:max-w-full": !isBigBoard,
                         "w-max": isBigBoard
