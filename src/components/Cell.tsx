@@ -13,14 +13,12 @@ export function Cell({ cell, onClick, onRightClick }: Props) {
       onClick={onClick}
       onContextMenu={onRightClick}
       className={`
-    aspect-square w-full flex items-center justify-center
+    size-8 sm:size-10          /* Tamaño fijo de la celda */
+    flex items-center justify-center
     select-none transition-transform
-
     border border-gray-700
-    font-bold
-
-    text-xs     /* tamaño celular */
-    sm:text-sm  /* más grande en 640px+ */
+    font-bold text-xs sm:text-sm
+    overflow-hidden             /* Evita que el contenido empuje el tamaño */
 
     ${cell.isRevealed
           ? "bg-gray-300 text-black"

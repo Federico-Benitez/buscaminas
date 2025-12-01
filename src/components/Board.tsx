@@ -33,11 +33,10 @@ export function Board({ board, onCellClick, onCellRightClick, lives, maxLives }:
         const handleResize = () => {
             if (!containerRef.current) return;
 
-            const boardEl = containerRef.current.querySelector('.board-grid');
+            const boardEl = containerRef.current.querySelector('.board-grid') as HTMLElement;
             if (!boardEl) return;
 
-            const rect = boardEl.getBoundingClientRect();
-            const boardWidth = rect.width;
+            const boardWidth = boardEl.offsetWidth;
 
             const margin = 24; // small safety margin
             const available = window.innerWidth - margin;
