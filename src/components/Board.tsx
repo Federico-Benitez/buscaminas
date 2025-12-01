@@ -1,4 +1,3 @@
-import { clsx as cx } from "clsx";
 import { Cell } from "./Cell";
 import type GameClass from "../game/Game";
 import type { Board as BoardType } from "../game/types";
@@ -65,12 +64,11 @@ export function Board({ board, onCellClick, onCellRightClick, lives, maxLives }:
                 style={{ transform: `scale(${isBigBoard ? 1 : scale})` }}
             >
                 <div
-                    className={cx("board-grid grid gap-[2px] bg-neutral-700 p-2 rounded-lg mx-auto", {
-                        "max-w-[360px] w-full": !isBigBoard,
-                        "sm:max-w-[480px]": !isBigBoard,
-                        "md:max-w-full": !isBigBoard,
-                        "w-max": isBigBoard
-                    })}
+                    className={`
+  board-grid grid gap-[2px] bg-neutral-700 p-2 rounded-lg mx-auto
+  ${!isBigBoard ? "max-w-[360px] w-full sm:max-w-[480px] md:max-w-full" : ""}
+  ${isBigBoard ? "w-max" : ""}
+`}
                     style={{
                         gridTemplateColumns: `repeat(${cols}, minmax(18px, 1fr))`,
                     }}
