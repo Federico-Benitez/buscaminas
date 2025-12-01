@@ -13,19 +13,18 @@ export function Cell({ cell, onClick, onRightClick }: Props) {
       onClick={onClick}
       onContextMenu={onRightClick}
       className={`
-        w-10 h-10 flex items-center justify-center
-        select-none transition-transform duration-150
+    aspect-square w-full flex items-center justify-center
+    select-none transition-transform duration-150
 
-        border border-gray-700 
-        text-lg font-bold
+    border border-gray-700 text-lg font-bold
 
-        ${cell.isRevealed
+    ${cell.isRevealed
           ? "bg-gray-300 text-black"
           : "bg-gray-500 hover:bg-gray-400 active:scale-[0.97] text-white"
         }
 
-        ${cell.isRevealed ? "animate-reveal" : ""}
-      `}
+    ${cell.isRevealed ? "animate-reveal" : ""}
+  `}
     >
       <span className="flex items-center justify-center w-full h-full">
         {cell.isRevealed && cell.isMine && (
