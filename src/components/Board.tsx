@@ -26,14 +26,24 @@ export function Board({ board, onCellClick, onCellRightClick, lives, maxLives }:
         const handleResize = () => {
             if (!containerRef.current) return;
 
-            // Calculate required width: cols * 40px (cell) + (cols-1) * 2px (gap) + 16px (padding)
-            // Actually simpler: measure the board's natural width or estimate it.
-            // Cell is w-10 (40px) + gap-[2px].
-            const boardWidth = cols * 42;
-            const availableWidth = window.innerWidth - 32; // 16px padding on each side
+            // Calculate required width more accurately:
+            // - Each cell: 40px (w-10)
+            // - Gap between cells: 2px
+            // - Board padding: 8px on each side (p-2 = 0.5rem = 8px)
+            // Total width = (cols * 40) + ((cols - 1) * 2) + (2 * 8)
+            const cellWidth = 40;
+            const gapWidth = 2;
+            const boardPadding = 16; // p-2 on both sides
+            const boardWidth = (cols * cellWidth) + ((cols - 1) * gapWidth) + boardPadding;
+
+            // Available width with some margin for safety
+            const isMobile = window.innerWidth < 640; // sm breakpoint
+            const horizontalMargin = isMobile ? 16 : 48; // Less margin on mobile
+            const availableWidth = window.innerWidth - horizontalMargin;
 
             if (boardWidth > availableWidth) {
-                setScale(availableWidth / boardWidth);
+                // Add a small buffer to prevent edge cases
+                setScale((availableWidth / boardWidth) * 0.98);
             } else {
                 setScale(1);
             }
@@ -44,10 +54,10 @@ export function Board({ board, onCellClick, onCellRightClick, lives, maxLives }:
         return () => window.removeEventListener('resize', handleResize);
     }, [cols]);
     return (
-        <div className="flex justify-center items-center p-6 w-full overflow-hidden">
+        <div className="flex justify-center items-center p-2 sm:p-6 w-full overflow-hidden">
             <div
                 ref={containerRef}
-                className="relative transition-transform duration-200 origin-top"
+                className="relative transition-transform duration-200 origin-center"
                 style={{ transform: `scale(${scale})` }}
             >
                 <div
