@@ -27,4 +27,33 @@ describe('Score', () => {
     expect(clone.value).toBe(50);
     expect(clone).not.toBe(score);
   });
+
+  describe('subtract', () => {
+    it('should subtract points normally', () => {
+      const score = new Score(100);
+      score.subtract(30);
+      expect(score.value).toBe(70);
+    });
+
+    it('should prevent negative scores', () => {
+      const score = new Score(20);
+      score.subtract(50);
+      expect(score.value).toBe(0);
+    });
+
+    it('should handle exact subtraction to zero', () => {
+      const score = new Score(50);
+      score.subtract(50);
+      expect(score.value).toBe(0);
+    });
+
+    it('should handle multiple add and subtract operations', () => {
+      const score = new Score();
+      score.add(100);
+      score.subtract(30);
+      score.add(50);
+      score.subtract(20);
+      expect(score.value).toBe(100);
+    });
+  });
 });
