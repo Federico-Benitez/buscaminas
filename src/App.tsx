@@ -108,6 +108,9 @@ export default function App() {
               mb-4
             ">
               ¡Ganaste! 🎉
+              <div className="text-xl mt-2 text-yellow-400">
+                Puntuación final: {game.score.value}
+              </div>
             </div>
           )}
           {game.gameState === 'lost' && (
@@ -117,6 +120,9 @@ export default function App() {
               mb-4
             ">
               ¡Perdiste! 💥
+              <div className="text-xl mt-2 text-yellow-400">
+                Puntuación final: {game.score.value}
+              </div>
             </div>
           )}
           <button
@@ -140,6 +146,7 @@ export default function App() {
             board={game}
             lives={game.lives.count}
             maxLives={game.lives.maxLives}
+            score={game.score.value}
             onCellClick={handleLeftClick}
             onCellRightClick={handleRightClick}
           />

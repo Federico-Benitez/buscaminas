@@ -2,6 +2,7 @@ import { Cell } from "./Cell";
 import type GameClass from "../game/Game";
 import type { Board as BoardType } from "../game/types";
 import { LivesDisplay } from "./LivesDisplay";
+import { ScoreDisplay } from "./ScoreDisplay";
 import { useEffect, useState, useRef } from "react";
 
 
@@ -11,13 +12,14 @@ type Props = {
     onCellRightClick: (x: number, y: number) => void;
     lives: number;
     maxLives: number;
+    score: number;
 };
 
 function isBoardWithToJSON(v: unknown): v is { toJSON: () => BoardType } {
     return typeof v === 'object' && v !== null && 'toJSON' in (v as object) && typeof ((v as { toJSON?: unknown }).toJSON) === 'function';
 }
 
-export function Board({ board, onCellClick, onCellRightClick, lives, maxLives }: Props) {
+export function Board({ board, onCellClick, onCellRightClick, lives, maxLives, score }: Props) {
     const boardGrid: BoardType = isBoardWithToJSON(board) ? board.toJSON() : (board as BoardType);
     const cols = boardGrid[0].length;
     const containerRef = useRef<HTMLDivElement>(null);
@@ -84,7 +86,10 @@ export function Board({ board, onCellClick, onCellRightClick, lives, maxLives }:
                         ))
                     )}
                 </div>
-                <LivesDisplay lives={lives} maxLives={maxLives} />
+                <div className="flex items-center justify-between gap-4 w-full">
+                    <ScoreDisplay score={score} />
+                    <LivesDisplay lives={lives} maxLives={maxLives} />
+                </div>
             </div>
         </div >
     );

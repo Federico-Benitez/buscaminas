@@ -9,6 +9,10 @@ export class Score {
     this.value += points;
   }
 
+  subtract(points: number) {
+    this.value = Math.max(0, this.value - points);
+  }
+
   reset() {
     this.value = 0;
   }

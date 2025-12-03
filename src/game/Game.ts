@@ -116,6 +116,7 @@ export class Game {
     // Logic for revealing a mine
     if (cell.isMine) {
       cell.reveal();
+      game.score.subtract(50); // -50 points for detonating a bomb
       if (!game.lives.isEmpty()) {
         game.lives.loseLife();
         if (game.lives.isEmpty()) {
@@ -136,11 +137,11 @@ export class Game {
     } else {
       // Just reveal this single cell
       cell.reveal();
-      game.score.add(10);
+      game.score.add(15); // +15 points for revealing a cell
       
       if (cell.isLife) {
         game.lives.gainLife();
-        game.score.add(50);
+        game.score.add(50); // +50 bonus for life power-up
       }
     }
 
@@ -158,7 +159,16 @@ export class Game {
 
     const cell = game.grid[y]?.[x];
     if (!cell || cell.isRevealed) return game;
+    
+    const wasFlagged = cell.isFlagged;
     cell.toggleFlag();
+    
+    // Award +100 points for correctly flagging a mine (first time only)
+    if (!wasFlagged && cell.isFlagged && cell.isMine && !cell.correctlyFlaggedBefore) {
+      game.score.add(100);
+      cell.correctlyFlaggedBefore = true;
+    }
+    
     return game;
   }
 
@@ -191,11 +201,11 @@ export class Game {
       if (!cell || cell.isRevealed || cell.isFlagged) continue;
 
       cell.reveal();
-      this.score.add(10); // Points for flood filled cells
+      this.score.add(15); // +15 points for each cell in empty region
 
       if (cell.isLife) {
         this.lives.gainLife();
-        this.score.add(50);
+        this.score.add(50); // +50 bonus for life power-up
       }
 
       if (cell.neighborMines > 0) continue;
